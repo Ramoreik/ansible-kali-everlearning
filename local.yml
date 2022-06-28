@@ -1,0 +1,176 @@
+---
+- name: "Playbook to setup a Kali VM to be ready and to my liking"
+  hosts: "kali"
+  become: true
+  vars:
+    user: kali
+  vars_files:
+    - vars/constants.yml
+  tasks:
+    - block:
+      - name: "Ending play if necessary variables are not defined."
+        debug:
+          msg: "Ending play ..."
+
+      - meta: end_play
+      when: user is not defined
+
+    - name: "Adding necessary apt keys."
+      apt_key:
+        url: "{{ keyserver }}"
+        state: present
+      loop: "{{ apt_keys }}"
+      loop_control:
+        loop_var: keyserver
+
+    - name: "Adding necessary apt repositories."
+      apt_repository:
+        repo: "{{ repo }}"
+        state: present
+      loop: "{{ present_apt_repositories }}"
+      loop_control:
+        loop_var: repo
+
+    - name: "Removing unnecessary apt repositories."
+      apt_repository:
+        repo: "{{ repo }}"
+        state: absent
+      loop: "{{ absent_apt_repositories }}"
+      loop_control:
+        loop_var: repo
+
+    - name: "Updating apt cache."
+      apt:
+        update_cache: yes
+
+    - name: "Updating distro."
+      apt:
+        upgrade: dist
+
+    - name: "Installing apt packages."
+      apt:
+        name: "{{ pkg }}"
+      loop: "{{ apt_pkgs }}"
+      loop_control:
+        loop_var: pkg
+
+    - name: "Installing pip packages."
+      pip:
+        name: "{{ pkg }}"
+      loop: "{{ python_pkgs }}"
+      loop_control: 
+        loop_var: pkg
+
+    - name: "Add {{ user }} to docker group"
+      user:
+        name: kali
+        groups: docker
+        append: yes
+
+    - name: "Fetching install scripts."
+      get_url:
+        url: "{{ script.url }}"
+        dest: "{{ script.dest }}"
+        mode: 0755
+      loop: "{{ install_scripts }}"
+      loop_control:
+        loop_var: script
+
+    - name: "Launching all previously downloaded scripts as {{ user }}."
+      become: true
+      become_user: "{{ user }}"
+      command: "{{ script.dest }} {{ script.opts }}"
+      args:
+        creates: "{{ script.creates | default(omit)}}"
+      loop: "{{ install_scripts }}"
+      loop_control:
+        loop_var: script
+
+    - name: "Cleaning installation scripts."
+      file:
+        path: "{{ script.dest }}"
+        state: absent
+      loop: "{{ install_scripts }}"
+      loop_control:
+        loop_var: script
+
+    - name: "Installing appimages."
+      get_url:
+        url: "{{ appimage.url }}"
+        dest: "{{ appimage.dest }}"
+        mode: 0755
+      loop: "{{ appimages }}"
+      loop_control:
+        loop_var: appimage
+
+    - name: "Installing cargo packages as {{ user }}."
+      become: true
+      become_user: "{{ user }}"
+      shell: "/home/{{ user }}/.cargo/bin/cargo install {{ pkg }}"
+      loop: "{{ cargo_pkgs }}"
+      loop_control:
+        loop_var: pkg
+
+    - name: "Copying system config files."
+      copy:
+        src: "{{ config.src }}"
+        dest: "{{ config.dest }}"
+      loop: "{{ system_configs }}"
+      loop_control:
+        loop_var: config
+
+    - name: "Copying config files in {{ user}}'s home."
+      become: true
+      become_user: "{{ user }}"
+      copy:
+        src: "{{ config.src }}"
+        dest: "{{ config.dest }}"
+        mode: 0700
+      loop: "{{ configs }}"
+      loop_control:
+        loop_var: config
+
+    - name: "Created missing directories for templated files"
+      become: true
+      become_user: "{{ user }}"
+      file:
+        path: "{{ template.dest | dirname }}"
+        state: directory
+      loop: "{{ templates }}"
+      loop_control:
+        loop_var: template
+
+    - name: "Templating config files." 
+      become: true
+      become_user: "{{ user }}"
+      template:
+        src: "{{ template.src }}"
+        dest: "{{ template.dest }}"
+      loop: "{{ templates }}"
+      loop_control:
+        loop_var: template
+
+    - name: "Clean authorized keys used for the setup."
+      file: 
+        path: /root/.ssh/authorized_keys
+        state: absent
+
+    - name: "Add aliases sourcing to existing ~/.zshrc"
+      lineinfile:
+        path: "/home/{{ user }}/.zshrc"
+        line: "{{ line }}"
+      loop: "{{ zshrc_lines }}"
+      loop_control:
+        loop_var: line
+
+    - name: "Copying alacritty to /usr/bin"
+      copy:
+        src: "/home/{{ user }}/.cargo/bin/alacritty"
+        dest: "/usr/bin/alacritty"
+        mode: 0755
+        remote_src: true
+
+    - name: "Stop ssh service ."
+      systemd:
+        state: stopped
+        name: ssh

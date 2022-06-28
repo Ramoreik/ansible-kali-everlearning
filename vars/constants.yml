@@ -1,0 +1,128 @@
+apt_keys:
+  - "https://download.sublimetext.com/sublimehq-pub.gpg"
+
+present_apt_repositories:
+  - "deb https://download.sublimetext.com/ apt/stable/"
+  - "deb https://http.kali.org/kali kali-rolling main non-free contrib"
+
+absent_apt_repositories:
+  - "deb http://http.kali.org/kali kali-rolling main contrib non-free"
+
+
+apt_pkgs:
+  - golang
+  - docker
+  - docker-compose
+  - python3
+  - python3-pip
+  - python3-xcffib
+  - python3-cairocffi
+  - libpangocairo-1.0-0
+  - virtualenv
+  - virtualenvwrapper
+  - nnn
+  - sublime-text
+  - gobuster
+  - ffuf
+  - i3-gaps
+  - i3status
+  - nitrogen
+  - compton
+  - polybar 
+  - kali-tools-web
+  - kali-tools-passwords
+  - kali-tools-database
+  - kali-tools-reverse-engineering
+  - kali-tools-post-exploitation
+  - build-essential
+  - cmake
+  - libxcb-xfixes0-dev
+  - pkg-config
+  - libfreetype6-dev
+  - libfontconfig1-dev
+  - rofi
+  - chromium
+  - flameshot
+  - nm-tray
+  - xclip
+
+python_pkgs:
+  - bpython
+  - dbus-next
+  - qtile
+  - pylint
+  - yapf
+  - autoflake
+  - isort
+  - coverage
+  - jedi
+
+appimages:
+  - url: https://github.com/obsidianmd/obsidian-releases/releases/download/v0.13.19/Obsidian-0.13.19.AppImage
+    dest: /usr/bin/obsidian
+
+  - url: https://github.com/neovim/neovim/releases/download/nightly/nvim.appimage
+    dest: /usr/bin/nvim
+
+install_scripts:
+  - url : "https://sh.rustup.rs"
+    dest: "/tmp/rustup-init.sh"
+    opts: "-y"
+    creates: "/home/{{ user }}/.cargo/bin/cargo"
+
+  - url: "https://spacevim.org/install.sh"
+    dest: "/tmp/spacevim-install.sh"
+    opts: ""
+    creates: "/home/{{ user }}/.SpaceVim.d/init.toml"
+
+  - url: "https://nim-lang.org/choosenim/init.sh"
+    dest: "/tmp/choosenim-init.sh"
+    opts: ""
+    creates: "/home/{{ user }}/.nimble/bin/choosenim"
+
+cargo_pkgs:
+  - alacritty
+  - exa
+  - dotr
+  - t-rec
+ 
+configs:
+  - src: files/.config
+    dest: "/home/{{ user }}"
+
+  - src: files/.local
+    dest: "/home/{{ user }}"
+
+  - src: files/.vim 
+    dest: "/home/{{ user }}"
+
+  - src: files/.wallpapers
+    dest: "/home/{{ user }}"
+
+  - src: files/.vimrc
+    dest: "/home/{{ user }}/.vimrc"
+
+  - src: files/.Xresources
+    dest: "/home/{{ user }}/.Xresources"
+
+  - src: files/pentest.alias
+    dest: "/home/{{ user }}/pentest.alias"
+
+templates:
+  - src: templates/bg-saved.cfg.j2
+    dest: "/home/{{ user }}/.config/nitrogen/bg-saved.cfg"
+
+  - src: templates/nitrogen.cfg.j2
+    dest: "/home/{{ user }}/.config/nitrogen/nitrogen.cfg"
+
+  - src: templates/init.toml.j2
+    dest: "/home/{{ user }}/.SpaceVim.d/init.toml"
+
+zshrc_lines:
+  - "alias vim=nvim"
+  - ". ~/pentest.alias"
+  - "PATH=~/.cargo/bin/:/home/gh0st/.nimble/bin:$PATH"
+
+system_configs:
+  - src: files/qtile.desktop
+    dest: /usr/share/xsessions/

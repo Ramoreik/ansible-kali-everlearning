@@ -1,0 +1,6 @@
+let g:netrw_dirhistmax  =10
+let g:netrw_dirhistcnt =4
+let g:netrw_dirhist_4='/home/lance/.msf4/modules'
+let g:netrw_dirhist_3='/home/lance/.msf4'
+let g:netrw_dirhist_2='/usr/share/metasploit-framework/vendor/bundle/ruby/2.7.0/gems/net-ssh-6.1.0/lib/net/ssh'
+let g:netrw_dirhist_1='/home/lance/pentesting/OSCP-notes/exercices/11-112'

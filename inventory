@@ -1,0 +1,5 @@
+[kali]
+192.168.217.129
+
+[kali:vars]
+ansible_python_interpreter=/usr/bin/python3
